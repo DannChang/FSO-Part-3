@@ -24,65 +24,79 @@ let persons = [
         name: "Mary Poppendick",
         number: "39-23-6423122"
     },
-]
+    {
+        id: 5,
+        name: "Bobby Chan",
+        number: "8888888888"
+    },
+];
 
-// const generateId = () => {
-//     const maxId = notes.length > 0
-//         ? Math.max(...notes.map(n => n.id)) // spread syntax ... converts the array to individual numbers as a parameter for Math.max
-//         : 0;
-//     return maxId + 1;
-// }
+const getRandomInt = () => {
+    const min = Math.ceil(0);
+    const max = Math.floor(1000);
+    return Math.floor(Math.random() * (max - min) + min);
+};
 
-// app.post('/api/persons', (request, response) => {
-//     const body = request.body;
+app.post('/api/persons', (request, response) => {
+    const body = request.body;
 
-//     if (!body.content) {
-//         return response.status(400).json({
-//             error: 'content missing'
-//         });
-//     } 
+    if (!body.name) {
+        return response.status(400).json({
+            error: 'name is missing'
+        });
+    } else if (!body.number) {
+        return response.status(400).json({
+            error: 'number is missing'
+        })
+    } else if (persons.find(person => person.name === body.name)) {
+        return response.status(400).json({
+            error: 'name must be unique'
+        })
+    } 
 
-//     const person = {
-//         content: body.content,
-//         important: body.important || false,
-//         date: new Date(),
-//         id: generateId(),
-//     }
+    const person = {
+        id: getRandomInt(),
+        name: body.name,
+        number: body.number,
+    };
     
-//     notes = persons.concat(person);
-//     console.log(person);
+    persons = persons.concat(person);
+    console.log(person);
+    console.log(error);
+    response.json(person);
+});
 
-//     response.json(person);
-// });
+app.delete('api/persons/:id', (request, response) => {
+    const id = Number(request.params.id);
+    persons = persons.filter(person => person.id !== id);
+    console.log(persons)
+    response.status(204).end();
+    
+});
 
 app.get('/api/persons', (request, response) => {
     response.json(persons);
 });
 
-app.get('/info', (request,response) => {
-    const personEntry = `<p>Phonebook has info for ${persons.length} people</p>`
-    const dateEntry = `<p>${new Date()}</p>`;
-    response.send(`${personEntry}${dateEntry}`);
-})
 
 app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id);
-    const person = persons.find(person => person.id === id);
-    console.log(person)
-    if (person) {
-        response.json(person);
+    const personId = persons.find(person => person.id === id);
+    console.log(personId);
+    if (personId) {
+        response.json(personId);
     } else {
         response.status(404).end();
     };
 });
 
-app.delete('api/notes/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const persons = persons.filter(note => note.id !== id)
 
-    response.status(204).end();
+
+app.get('/info', (request,response) => {
+    const personEntry = `<p>Phonebook has info for ${persons.length} people</p>`
+    const dateEntry = `<p>${new Date()}</p>`;
+    response.send(`${personEntry}${dateEntry}`);
 });
-
 
 const PORT = 3001;
 app.listen(PORT, () => {
