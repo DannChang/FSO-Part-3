@@ -1,7 +1,21 @@
 const express = require('express');
+const morgan = require('morgan');
 const app = express();
 
 app.use(express.json());
+app.use(morgan((tokens, request, response) => {
+    const tokenMethod = tokens.method(request, response);
+    const logger = [
+        tokenMethod,
+        tokens.url(request, response),
+        tokens.status(request, response),
+        tokens.res(request, response, 'content-length'), '-',
+        tokens['response-time'](request, response), 'ms'
+    ];
+    if (tokenMethod === 'POST') {
+        logger.push(JSON.stringify(request.body));
+    } return logger.join(' ');
+}));
 
 let persons = [
     {
@@ -26,7 +40,7 @@ let persons = [
     },
     {
         id: 5,
-        name: "Bobby Chan",
+        name: "Random Dude",
         number: "8888888888"
     },
 ];
@@ -37,9 +51,23 @@ const getRandomInt = () => {
     return Math.floor(Math.random() * (max - min) + min);
 };
 
+app.get('/', (request, response) => {
+    response.send('<h1>Phonebook Database</h1>')
+})
+
+app.get('/info', (request,response) => {
+    const personEntry = `<p>Phonebook has info for ${persons.length} people</p>`
+    const dateEntry = `<p>${new Date()}</p>`;
+    response.send(`${personEntry}${dateEntry}`);
+});
+
+app.get('/api/persons', (request, response) => {
+    response.json(persons);
+});
+
 app.post('/api/persons', (request, response) => {
     const body = request.body;
-
+    const found = persons.find(person => person.name === body.name);
     if (!body.name) {
         return response.status(400).json({
             error: 'name is missing'
@@ -48,62 +76,42 @@ app.post('/api/persons', (request, response) => {
         return response.status(400).json({
             error: 'number is missing'
         })
-    } else if (persons.find(person => person.name === body.name)) {
+    } else if (found) {
         return response.status(400).json({
             error: 'name must be unique'
         })
-    } 
-
-    const person = {
-        id: getRandomInt(),
-        name: body.name,
-        number: body.number,
-    };
-    
-    persons = persons.concat(person);
-    console.log(person);
-    console.log(error);
-    response.json(person);
+    } else {
+        const newPerson = {
+            id: getRandomInt(),
+            name: body.name,
+            number: body.number,
+        };
+        persons = persons.concat(newPerson);
+        response.json(newPerson);   
+    }
 });
-
-app.delete('api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    persons = persons.filter(person => person.id !== id);
-    console.log(persons)
-    response.status(204).end();
-    
-});
-
-app.get('/api/persons', (request, response) => {
-    response.json(persons);
-});
-
 
 app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id);
-    const personId = persons.find(person => person.id === id);
-    console.log(personId);
-    if (personId) {
-        response.json(personId);
+    const foundPerson = persons.find(person => person.id === id);
+    if (foundPerson) {
+        response.json(foundPerson);
     } else {
         response.status(404).end();
     };
 });
 
-
-
-app.get('/info', (request,response) => {
-    const personEntry = `<p>Phonebook has info for ${persons.length} people</p>`
-    const dateEntry = `<p>${new Date()}</p>`;
-    response.send(`${personEntry}${dateEntry}`);
+app.delete('api/persons/:id', (request, response) => {
+    const id = Number(request.params.id);
+    const foundPerson = persons.find(person => person.id === id);
+    if (foundPerson) {
+        response.json(persons.filter(person => person.id !== id));
+    } else {
+        response.status(204).end();
+    };
 });
 
 const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});
-
-const PORT2 = 3003;
-app.listen(PORT2, () => {
-    console.log(`Server is running on port ${PORT2}`);
 });

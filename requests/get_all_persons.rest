@@ -2,7 +2,7 @@ GET http://localhost:3001/api/persons
 
 ###
 
-DELETE http://localhost:3001/api/persons/id:5... 
+DELETE http://localhost:3001/api/persons/5
 
 
 ###
@@ -10,6 +10,6 @@ POST http://localhost:3001/api/persons/
 content-type: application/json
 
 {
-    "name": "Bobby Chan",
+    "name": "Bobby Chani",
     "number": "0912390"
 }
