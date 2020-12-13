@@ -1,8 +1,10 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const path = require('path')
 const app = express();
 
+app.use(express.static('build'));
 app.use(cors());
 app.use(express.json());
 app.use(morgan((tokens, request, response) => {
@@ -54,7 +56,7 @@ const getRandomInt = () => {
 };
 
 app.get('/', (request, response) => {
-    response.send('<h1>Phonebook Database</h1>')
+    response.sendFile(path.join(__dirname, 'build', 'index.html'));
 })
 
 app.get('/info', (request,response) => {
