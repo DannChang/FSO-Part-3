@@ -60,13 +60,15 @@ app.get('/', (request, response) => {
 })
 
 app.get('/info', (request,response) => {
-    const personEntry = `<p>Phonebook has info for ${persons.length} people</p>`
+    const personEntry = `<p>Phonebook has info for ${persons.length} people</p>`;
     const dateEntry = `<p>${new Date()}</p>`;
     response.send(`${personEntry}${dateEntry}`);
 });
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons);
+    Person.find({}).then(persons => {
+        response.json(persons);
+    });
 });
 
 app.post('/api/persons', (request, response) => {
