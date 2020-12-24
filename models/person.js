@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Person = require('./models/person');
 
+const url = process.env.MONGODB_URI
 
+console.log("connecting to ")
 
 //create schema
 const personSchema = new Schema({
@@ -9,4 +12,4 @@ const personSchema = new Schema({
     number: String,
 })
 
-module.exports = Person = mongoose.model('person'. personSchema);
+module.exports = mongoose.model('person'. personSchema);
