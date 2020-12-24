@@ -1,24 +1,22 @@
 const mongoose = require('mongoose');
 
+// hard coded pw: z0mrmh7mUtqcKvnU
+const password = process.argv[2];
+const url = `mongodb+srv://fullstack:${password}@cluster0.9um01.mongodb.net/<dbname>?retryWrites=true&w=majority`
+
+mongoose.connect(url, { useNewUrlParser: true });
+
+const personSchema = new mongoose.SChema({
+    name: String,
+    number: String,
+})
+
+const Person = mongoose.model('Person', personSchema)
+
 if (process.argv.length < 3) {
     console.log('Please provide the password as an argument: node mongo.js <password>');
     process.exit(1);
 }
-
-const password = process.argv[2];
-const url = 
-    `mongodb+srv://fullstack:${password}@cluster0.9um01.mongodb.net/<dbname>?retryWrites=true&w=majority`;
-
-mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true });
-
-// Schemas (Think object constructor)
-const personSchema = new mongoose.Schema({
-    name: String, 
-    number: String,
-});
-// Models (Think document)
-const Person = mongoose.model('Person', personSchema);
-
 if (process.argv.length < 5) {
     Person.find({}).then(result => {
         result.forEach(person => {
@@ -36,6 +34,5 @@ if (process.argv.length < 5) {
         mongoose.connection.close();
     });
 }
-// Creating and saving objects to Mongoose
 
 

@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path')
 const app = express();
+const Person = require('./models/person');
 
 app.use(express.static('build'));
 app.use(cors());
@@ -49,11 +51,6 @@ let persons = [
     },
 ];
 
-const getRandomInt = () => {
-    const min = Math.ceil(0);
-    const max = Math.floor(1000);
-    return Math.floor(Math.random() * (max - min) + min);
-};
 
 app.get('/', (request, response) => {
     response.sendFile(path.join(__dirname, 'build', 'index.html'));
@@ -73,38 +70,34 @@ app.get('/api/persons', (request, response) => {
 
 app.post('/api/persons', (request, response) => {
     const body = request.body;
-    const found = persons.find(person => person.name === body.name);
-    if (!body.name) {
-        return response.status(400).json({
-            error: 'name is missing'
-        });
-    } else if (!body.number) {
-        return response.status(400).json({
-            error: 'number is missing'
-        })
-    } else if (found) {
-        return response.status(400).json({
-            error: 'name must be unique'
-        })
-    } else {
-        const newPerson = {
-            id: getRandomInt(),
-            name: body.name,
-            number: body.number,
-        };
-        persons = persons.concat(newPerson);
-        response.json(newPerson);   
+
+    if (body.content === undefined) {
+        return response.status(400).json({ error: 'content missing' })
     }
+
+    const person = new Person({
+        name: body.name,
+        number: body.number,
+    })
+
+    person.save().then(savedNote => {
+        response.json(savedNote)
+    })
 });
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const foundPerson = persons.find(person => person.id === id);
-    if (foundPerson) {
-        response.json(foundPerson);
-    } else {
-        response.status(404).end();
-    };
+    Person.findById(request.params.id)
+        .then(person => {
+            if(person) {
+                response.json(person)
+            } else {
+                response.status(404).end()
+            }
+        })
+        .catch(error => {
+            console.log(error)
+            response.status(500).end()
+        })
 });
 
 app.delete('api/persons/:id', (request, response) => {
@@ -117,7 +110,7 @@ app.delete('api/persons/:id', (request, response) => {
     };
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
