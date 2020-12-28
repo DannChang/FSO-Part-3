@@ -85,7 +85,7 @@ app.post('/api/persons', (request, response) => {
     })
 });
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id)
         .then(person => {
             if(person) {
@@ -94,20 +94,15 @@ app.get('/api/persons/:id', (request, response) => {
                 response.status(404).end()
             }
         })
-        .catch(error => {
-            console.log(error)
-            response.status(500).end()
-        })
+        .catch(error => next(error))
 });
 
-app.delete('api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const foundPerson = persons.find(person => person.id === id);
-    if (foundPerson) {
-        response.json(persons.filter(person => person.id !== id));
-    } else {
-        response.status(204).end();
-    };
+app.delete('api/persons/:id', (request, response, next) => {
+    Person.findByIdAndDelete(request.params.id)
+        .then(() => {
+            response.status(204).end()
+        })
+        .catch(next)
 });
 
 const PORT = process.env.PORT;
