@@ -2,13 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const path = require('path')
-const app = express();
-const Person = require('./models/person');
+const Person = require('./models/person'); 
 
-app.use(express.static('build'));
+const app = express();
+
+// Imports minified front-end app in 'build' folder
+app.use(express.static('build')); 
+// Imports cross-origin calls
 app.use(cors());
-app.use(express.json());
+// Imports body parser (part of Express now)
+app.use(express.json()); 
+// Imports morgan middleware to log [Method, url, status, response]
 app.use(morgan((tokens, request, response) => {
     const tokenMethod = tokens.method(request, response);
     const logger = [
@@ -23,66 +27,46 @@ app.use(morgan((tokens, request, response) => {
     } return logger.join(' ');
 }));
 
-let persons = [
-    {
-        id: 1,
-        name: "Arto Hellas",
-        number: "040-123456"
-    },
-    {
-        id: 2,
-        name: "Ada Lovelace",
-        number: "39-44-5323523"
-    },
-    {
-        id: 3,
-        name: "Dan Abramov",
-        number: "12-43-234345"
-    },
-    {
-        id: 4,
-        name: "Mary Poppendick",
-        number: "39-23-6423122"
-    },
-    {
-        id: 5,
-        name: "Random Dude",
-        number: "8888888888"
-    },
-];
 
-
+// Requests main page
 app.get('/', (request, response) => {
-    response.sendFile(path.join(__dirname, 'build', 'index.html'));
-})
-
-app.get('/info', (request,response) => {
-    const personEntry = `<p>Phonebook has info for ${persons.length} people</p>`;
-    const dateEntry = `<p>${new Date()}</p>`;
-    response.send(`${personEntry}${dateEntry}`);
+    response.send('Phonebook backend');
 });
 
-app.get('/api/persons', (request, response) => {
-    Person.find({}).then(persons => {
-        response.json(persons);
-    });
+app.get('/info', (request,response, next) => {
+    Person.find({})
+    .then((persons) => {
+        const personCount = persons.length === 1 ? '1 person' : `${persons.length} people`; 
+    
+        const personEntry = `<p>Phonebook has info for ${personCount} people</p>`;
+        const dateEntry = `<p>${new Date()}</p>`;
+
+        response.send(`${personEntry}${dateEntry}`);
+    })
+    .catch(next)
 });
 
-app.post('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
+    Person.find({})
+        .then(persons => {
+            response.json(persons);
+        })
+        .catch(next);
+}); 
+
+app.post('/api/persons', (request, response, next) => {
     const body = request.body;
-
-    if (body.content === undefined) {
-        return response.status(400).json({ error: 'content missing' })
-    }
 
     const person = new Person({
         name: body.name,
         number: body.number,
     })
 
-    person.save().then(savedNote => {
-        response.json(savedNote)
-    })
+    person.save()
+        .then(savedPerson => {
+            response.status(201).json(savedPerson)
+        })
+        .catch(next);
 });
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -94,16 +78,60 @@ app.get('/api/persons/:id', (request, response, next) => {
                 response.status(404).end()
             }
         })
-        .catch(error => next(error))
+        .catch(next);
 });
 
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+  
+    const person = {
+      name: body.name,
+      number: body.number,
+    }
+  
+    Person.findByIdAndUpdate(request.params.id, person, {
+      new: true,
+      runValidators: true,
+      context: 'query',
+    })
+      .then((updatedPerson) => {
+        if (updatedPerson) {
+          response.json(updatedPerson)
+        } else {
+          response.status(404).end()
+        }
+      })
+      .catch(next);
+  })
+
 app.delete('api/persons/:id', (request, response, next) => {
-    Person.findByIdAndDelete(request.params.id)
+    Person.findByIdAndRemove(request.params.id)
         .then(() => {
             response.status(204).end()
         })
-        .catch(next)
+        .catch(next);
 });
+
+app.use((request, response) => {
+    response.status(404).json({ error: 'unknown endpoint' });
+});
+
+// Error handling of all .catch(next) instances
+const errorHandler = (error, request, response, next) => {
+    console.log(error.message);
+
+    if (error.name === 'CaseError' && error.kind === 'ObjectId') {
+        return (
+            response.status(404).json({ error: 'malformatted id'})
+        );
+    } else if (error.name === 'ValidationError') {
+        response.status(400).json({ error: error.message })
+    }
+
+    next(error)
+};
+app.use(errorHandler);
+
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

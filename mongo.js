@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+if (process.argv.length < 3) {
+    console.log('Please provide the password as an argument: node mongo.js <password>');
+    process.exit(1);
+} 
 // hard coded pw: z0mrmh7mUtqcKvnU
 const password = process.argv[2];
 const url = `mongodb+srv://fullstack:${password}@cluster0.9um01.mongodb.net/<dbname>?retryWrites=true&w=majority`
@@ -13,10 +17,8 @@ const personSchema = new mongoose.SChema({
 
 const Person = mongoose.model('Person', personSchema)
 
-if (process.argv.length < 3) {
-    console.log('Please provide the password as an argument: node mongo.js <password>');
-    process.exit(1);
-}
+
+
 if (process.argv.length < 5) {
     Person.find({}).then(result => {
         result.forEach(person => {
@@ -30,7 +32,7 @@ if (process.argv.length < 5) {
 
     const person = new Person({ name, number });
     person.save().then(result => {
-        console.log(`Added ${person.name} number: ${person.number} to the phonebook`);
+        console.log(`Added ${result.name} number: ${result.number} to the phonebook`);
         mongoose.connection.close();
     });
 }
