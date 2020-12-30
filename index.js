@@ -88,7 +88,7 @@ app.put('/api/persons/:id', (request, response, next) => {
       name: body.name,
       number: body.number,
     }
-  
+    // update by entry's unique ID
     Person.findByIdAndUpdate(request.params.id, person, {
       new: true,
       runValidators: true,
@@ -105,9 +105,10 @@ app.put('/api/persons/:id', (request, response, next) => {
   })
 
 app.delete('api/persons/:id', (request, response, next) => {
-    Person.findByIdAndRemove(request.params.id)
+    Person
+        .findByIdAndRemove(request.params.id)
         .then(() => {
-            response.status(204).end()
+            response.status(200).end()
         })
         .catch(next);
 });
