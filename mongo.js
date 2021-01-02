@@ -1,4 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
+// const mongoose = require('mongoose');
 
 if (process.argv.length < 3) {
     console.log('Please provide the password as an argument: node mongo.js <password>');
@@ -10,7 +12,7 @@ const url = `mongodb+srv://fullstack:${password}@cluster0.9um01.mongodb.net/<dbn
 
 mongoose.connect(url, { useNewUrlParser: true });
 
-const personSchema = new mongoose.SChema({
+const personSchema = new mongoose.Schema({
     name: String,
     number: String,
 })

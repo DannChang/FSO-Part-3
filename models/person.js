@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 // const uniqueValidator = require('mongoose-unique-validator');
 
 const url = process.env.MONGODB_URI;
